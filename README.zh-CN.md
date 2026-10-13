@@ -262,6 +262,33 @@ wake-to-sleep prep took 5s
   **[bookfere/BookFere-Tools](https://github.com/bookfere/BookFere-Tools)** 以及前面那个
   `kindle-wall-display` —— 让我们看清 KUAL 的 `menu.json`（含子菜单）到底该怎么写。
 
+## 参与开发
+
+这里没有构建系统。Kindle 脚本和 Python 服务器都是"改完就拷"；测试不需要设备：
+
+```bat
+tools\syntax_check.bat         :: 用 busybox sh 语法检查所有 Kindle 脚本
+tools\sh_test\run_test.bat     :: server_interval / save_interval / ensure_slots
+```
+
+```bash
+javac -d tools/jvm_test/out android/java/com/kpw3/frame/PngEncoder.java \
+      android/java/com/kpw3/frame/Dither.java android/java/com/kpw3/frame/EnvPatcher.java \
+      tools/jvm_test/*.java
+java -cp tools/jvm_test/out com.kpw3.frame.EnvPatchTest kindle/screensaver/env.sh
+java -cp tools/jvm_test/out com.kpw3.frame.PngDitherTest out.png 16
+```
+
+安卓端用 `android\build.bat` 编译 —— `aapt2` + `javac` + `d8` + `apksigner`，
+不需要 Gradle，也不需要 Android Studio。
+
+如果你的网络连不上 `github.com`（只有 `api.github.com` 通），可以用
+`tools/push_via_api.py` 走 REST API 发布当前提交，替代 `git push`：
+
+```bash
+python tools/push_via_api.py <owner>/<repo>
+```
+
 ## 许可
 
 MIT，见 [LICENSE](LICENSE)。上面提到的第三方工具均未随本仓库分发。

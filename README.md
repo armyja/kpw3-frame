@@ -296,6 +296,35 @@ This project stands on other people's work. Thank you, in particular:
   `kindle-wall-display` again — for showing how KUAL's `menu.json` (including
   nested submenus) is meant to be written.
 
+## Working on this repo
+
+Nothing here needs a build system. The Kindle scripts and the Python server are
+edit-and-copy, and the tests run without a device:
+
+```bat
+tools\syntax_check.bat         :: busybox-sh syntax check of every Kindle script
+tools\sh_test\run_test.bat     :: server_interval / save_interval / ensure_slots
+```
+
+```bash
+javac -d tools/jvm_test/out android/java/com/kpw3/frame/PngEncoder.java \
+      android/java/com/kpw3/frame/Dither.java android/java/com/kpw3/frame/EnvPatcher.java \
+      tools/jvm_test/*.java
+java -cp tools/jvm_test/out com.kpw3.frame.EnvPatchTest kindle/screensaver/env.sh
+java -cp tools/jvm_test/out com.kpw3.frame.PngDitherTest out.png 16
+```
+
+The Android app builds with `android\build.bat` — `aapt2` + `javac` + `d8` +
+`apksigner`, no Gradle and no Android Studio required.
+
+If `github.com` is unreachable from your network (only `api.github.com` answers),
+`tools/push_via_api.py` publishes the current commit through the REST API instead
+of `git push`:
+
+```bash
+python tools/push_via_api.py <owner>/<repo>
+```
+
 ## Licence
 
 MIT — see [LICENSE](LICENSE). Third-party tools are credited above and are not

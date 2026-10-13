@@ -1,0 +1,6 @@
+{
+  "items": [
+    {"name": "Refresh image now", "action": "/bin/sh /mnt/us/screensaver/refill.sh", "exitmenu": true},
+    {"name": "Start wall display", "action": "/bin/sh /mnt/us/screensaver/wall.sh start", "exitmenu": true}
+  ]
+}

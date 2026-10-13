@@ -1,0 +1,29 @@
+# Python / server
+.venv/
+__pycache__/
+*.pyc
+
+# Build artefacts
+android/build/
+android/debug.keystore
+tools/jvm_test/out/
+tools/jvm_test/out.png
+
+# Local-only helpers (device deploy checks) and the abandoned prototype
+tools/local/
+experimental/
+
+# Sample pictures (bring your own)
+server/images/*
+!server/images/.gitkeep
+server/placeholders/
+
+# Kindle runtime state - this lives on the device, never in the repo
+kindle/screensaver/server.txt
+kindle/screensaver/current.png
+kindle/screensaver/wall.png
+kindle/screensaver/slot
+kindle/screensaver/suspend.ok
+kindle/screensaver/.env.new
+kindle/screensaver/logs/
+kindle/screensaver/xh

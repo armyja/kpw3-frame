@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension>
+	<information>
+		<name>Custom Screensaver (KPW3)</name>
+		<id>kpw3-screensaver</id>
+	</information>
+	<menus>
+		<!-- static menu.json: dynamic="false" keeps KUAL from rebuilding it -->
+		<menu type="json" dynamic="false">menu.json</menu>
+	</menus>
+</extension>

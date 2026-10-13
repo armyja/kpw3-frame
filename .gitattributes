@@ -1,0 +1,14 @@
+# Shell scripts must stay LF: they are copied straight onto the Kindle and
+# busybox sh fails on CRLF line endings ("bad interpreter" / stray \r).
+*.sh text eol=lf
+
+# Windows batch files are happiest with CRLF.
+*.bat text eol=crlf
+
+# Binary assets
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gz binary
+
+* text=auto

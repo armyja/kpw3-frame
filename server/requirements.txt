@@ -1,0 +1,2 @@
+# Only Pillow is needed; everything else is the Python standard library.
+pillow>=10

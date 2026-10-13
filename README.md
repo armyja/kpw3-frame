@@ -317,14 +317,6 @@ java -cp tools/jvm_test/out com.kpw3.frame.PngDitherTest out.png 16
 The Android app builds with `android\build.bat` — `aapt2` + `javac` + `d8` +
 `apksigner`, no Gradle and no Android Studio required.
 
-If `github.com` is unreachable from your network (only `api.github.com` answers),
-`tools/push_via_api.py` publishes the current commit through the REST API instead
-of `git push`:
-
-```bash
-python tools/push_via_api.py <owner>/<repo>
-```
-
 ## Licence
 
 MIT — see [LICENSE](LICENSE). Third-party tools are credited above and are not

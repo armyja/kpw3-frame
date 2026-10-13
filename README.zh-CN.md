@@ -282,13 +282,6 @@ java -cp tools/jvm_test/out com.kpw3.frame.PngDitherTest out.png 16
 安卓端用 `android\build.bat` 编译 —— `aapt2` + `javac` + `d8` + `apksigner`，
 不需要 Gradle，也不需要 Android Studio。
 
-如果你的网络连不上 `github.com`（只有 `api.github.com` 通），可以用
-`tools/push_via_api.py` 走 REST API 发布当前提交，替代 `git push`：
-
-```bash
-python tools/push_via_api.py <owner>/<repo>
-```
-
 ## 许可
 
 MIT，见 [LICENSE](LICENSE)。上面提到的第三方工具均未随本仓库分发。

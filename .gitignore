@@ -6,10 +6,8 @@ __pycache__/
 # Build artefacts
 android/build/
 android/debug.keystore
-tools/jvm_test/out/
-tools/jvm_test/out.png
 
-# Local-only helpers (device deploy checks) and the abandoned prototype
+# Local-only helpers and things that are deliberately not published
 tools/local/
 experimental/
 

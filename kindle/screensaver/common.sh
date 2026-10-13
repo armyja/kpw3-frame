@@ -9,7 +9,7 @@ SERVER_FILE="$BASE/server.txt"
 mkdir -p "$LOGS" 2>/dev/null
 
 # Pull in the user config right away, so every script sees SINGLE_IMAGE,
-# FETCH_SCHEDULE, WALL_* ... even if it never calls load_server.
+# WALL_* ... even if it never calls load_server.
 # shellcheck disable=SC1090
 [ -f "$BASE/env.sh" ] && . "$BASE/env.sh"
 
@@ -260,7 +260,3 @@ clear_alarm() {
   [ -n "$1" ] && echo 0 >"$1" 2>/dev/null
   return 0
 }
-
-# Best-effort helpers were removed: this device exposes no /sys/power/wake_lock,
-# so the safety RTC alarm (armed while awake) is what keeps the loop from ever
-# getting stuck.

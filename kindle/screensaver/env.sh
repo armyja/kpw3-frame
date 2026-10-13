@@ -35,8 +35,5 @@ export SLOT_COUNT=${SLOT_COUNT:-1}
 # no  = rotate through the slots, one new picture per fetch
 export SINGLE_IMAGE=${SINGLE_IMAGE:-yes}
 
-# cron schedule used by register_cron.sh (the non-RTC fallback path).
-export FETCH_SCHEDULE=${FETCH_SCHEDULE:-"*/10 * * * *"}
-
 # Pinged to detect that Wi-Fi is up.
 export WIFI_TEST_IP=${WIFI_TEST_IP:-192.168.1.1}

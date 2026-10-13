@@ -6,7 +6,7 @@
 # the suspend path that the suspend test proved safe, and means there is nothing
 # to restore when it stops. KUAL stays reachable the whole time.
 #
-#   wall.sh start     start the loop in the background (needs suspend.ok)
+#   wall.sh start     start the loop in the background
 #   wall.sh run       run the loop (this is what start launches)
 #   wall.sh stop      ask the loop to stop
 #
@@ -175,7 +175,7 @@ run_loop() {
     # Pick up env.sh changes (e.g. written over USB by the phone app) without a
     # restart. Our copies are cleared first because env.sh uses ${VAR:-default}
     # and would otherwise keep the old values.
-    unset WALL_INTERVAL WALL_WIFI_WAIT WALL_PM_STATE WALL_KICK_AFTER SINGLE_IMAGE FRAME_URL FETCH_SCHEDULE
+    unset WALL_INTERVAL WALL_WIFI_WAIT WALL_PM_STATE WALL_KICK_AFTER SINGLE_IMAGE FRAME_URL WALL_SETTLE SLOT_COUNT
     # shellcheck disable=SC1090
     . "$BASE/env.sh" 2>/dev/null
     INTERVAL=${WALL_INTERVAL:-900}
@@ -203,14 +203,6 @@ run_loop() {
 }
 
 cmd_start() {
-  if [ ! -f "$BASE/suspend.ok" ]; then
-    say "Run the suspend test first
-
-The wall display only starts after
-Wall display > Suspend test (1 min)
-reports PASS."
-    exit 1
-  fi
   if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE" 2>/dev/null)" 2>/dev/null; then
     say "Wall display is already running"
     exit 0

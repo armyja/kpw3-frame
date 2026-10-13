@@ -104,18 +104,20 @@ kindle/screensaver/                  →  /mnt/us/screensaver/
 kindle/extensions/kpw3-screensaver/  →  /mnt/us/extensions/kpw3-screensaver/
 ```
 
-安全弹出后，做一次性初始化。等价于（默认没把它放进菜单，因为只需一次）：
+安全弹出后（可选）让**系统自带屏保**也用同一张图，这样设备自己睡下时画面也一致。
+一次性操作、完全可逆：
 
 ```sh
-sh /mnt/us/screensaver/enable.sh      # 建立屏保目录软链 + 写入 cron 兜底任务
+mntroot rw
+mv /usr/share/blanket/screensaver /usr/share/blanket/screensaver.orig
+ln -s /mnt/us/screensaver/images /usr/share/blanket/screensaver
+mntroot ro
 ```
 
-然后让 Kindle 指向你的服务器，三种方式任选：
+然后让 Kindle 指向你的服务器，两种方式任选：
 
 - 直接编辑 `/mnt/us/screensaver/server.txt`（就一行 URL，插 USB 就能改）；
-- 用安卓 App 里的 **Write to Kindle (USB)**；
-- 或者在 shell 里 `sh /mnt/us/screensaver/set_server.sh detect`（扫局域网自动找服务器；
-  为了把菜单压到两项，它没有放进 KUAL）。
+- 用安卓 App 里的 **Write to Kindle (USB)**。
 
 最后 **KUAL → Start wall display** 启动。按一下电源键即停止，Kindle 就恢复成普通阅读器。
 
@@ -126,7 +128,7 @@ sh /mnt/us/screensaver/enable.sh      # 建立屏保目录软链 + 写入 cron �
 
 | 配置 | 默认 | 含义 |
 |---|---|---|
-| `FRAME_URL` | `http://192.168.1.50:8000/frame` | 取图地址（APK 或 `set_server.sh` 也会写这里） |
+| `FRAME_URL` | `http://192.168.1.50:8000/frame` | 取图地址（APK 也会写这里） |
 | `WALL_INTERVAL` | `900` | 刷新间隔秒数 —— **会被服务器覆盖** |
 | `WALL_WIFI_WAIT` | `240` | 每次唤醒后等 Wi-Fi 和服务器的最长时间 |
 | `SLOT_COUNT` | `1` | 保留几个屏保槽位（1 = 更新最快） |
@@ -135,15 +137,13 @@ sh /mnt/us/screensaver/enable.sh      # 建立屏保目录软链 + 写入 cron �
 **改间隔通常根本不用碰 Kindle。** 服务器通过 `/health` 下发（`ok 900`），循环每次唤醒读一次，
 把新值直接写回 `env.sh`，下一轮生效 —— 不用 USB、不用重启。
 
-不在 KUAL 菜单里、但需要时用得上的脚本：
+菜单背后用到的脚本（都在 `/mnt/us/screensaver/`，需要时也可以手动跑）：
 
 | 脚本 | 作用 |
 |---|---|
-| `enable.sh` / `disable.sh` | 建立 / 撤销屏保软链（完全可逆） |
-| `set_server.sh show\|test\|detect` | 显示 / 测试 / 自动探测服务器地址 |
-| `wall.sh stop` | 从 shell 停止循环 |
-| `suspend_test.sh` | 设 60 秒 RTC 闹钟 → 挂起 → 屏上报告 PASS/FAIL |
-| `diag.sh` | 只读诊断 → `/mnt/us/diag.txt` |
+| `wall.sh` | 循环本体：`start` / `stop`，或 `run` 前台运行（日志写 `logs/wall.log`） |
+| `fetch.sh` | 下载一张图放进 `images/`，并留一份 `current.png` 给循环 |
+| `refill.sh` | **Refresh image now** 调用的就是它 |
 
 ## 工作原理
 
@@ -158,9 +158,9 @@ wall.sh（循环）
    └─ 重复，直到你按电源键（提前唤醒 = 退出）
 ```
 
-系统自带屏保也没被放弃：`enable.sh` 会把 `/usr/share/blanket/screensaver`
-指向 `/mnt/us/screensaver/images`，所以设备自己睡下时（或你在循环停止时按电源键）
-显示的还是同一张图。另外还有一条 cron（`FETCH_SCHEDULE`）每 10 分钟刷新该目录作为兜底。
+系统自带屏保也可以显示同一张图：把 `/usr/share/blanket/screensaver` 指向
+`/mnt/us/screensaver/images`（安装一节里的可选步骤），这样设备自己睡下时
+（或你在循环停止时按电源键）显示的还是同一张图。
 
 ## 实测数据
 
@@ -195,7 +195,7 @@ wake-to-sleep prep took 5s
 | 锁屏上有状态栏残留 | 框架在我们画完之后又重绘了；这是"不接管屏幕"的代价（见下） |
 | 画面撕裂/花屏 | 面板在刷新中途被挂起；`draw_final` 用的是会等待的 `eips`，理论上不该再出现 |
 | Wi-Fi 一直不回来 | 休眠时射频关闭是正常的；`WALL_WIFI_WAIT`（240 秒）足以应付慢路由 |
-| 固件升级后失效 | 重新跑一次 `enable.sh` —— 软链可能被重置 |
+| 固件升级后失效 | 重做一次可选的屏保软链（见"安装：Kindle"） |
 
 ## 设计笔记（最有意思的部分）
 
@@ -264,20 +264,7 @@ wake-to-sleep prep took 5s
 
 ## 参与开发
 
-这里没有构建系统。Kindle 脚本和 Python 服务器都是"改完就拷"；测试不需要设备：
-
-```bat
-tools\syntax_check.bat         :: 用 busybox sh 语法检查所有 Kindle 脚本
-tools\sh_test\run_test.bat     :: server_interval / save_interval / ensure_slots
-```
-
-```bash
-javac -d tools/jvm_test/out android/java/com/kpw3/frame/PngEncoder.java \
-      android/java/com/kpw3/frame/Dither.java android/java/com/kpw3/frame/EnvPatcher.java \
-      tools/jvm_test/*.java
-java -cp tools/jvm_test/out com.kpw3.frame.EnvPatchTest kindle/screensaver/env.sh
-java -cp tools/jvm_test/out com.kpw3.frame.PngDitherTest out.png 16
-```
+这里没有构建系统。Kindle 脚本和 Python 服务器都是"改完就拷"：改文件 → 拷到 Kindle → 完事。
 
 安卓端用 `android\build.bat` 编译 —— `aapt2` + `javac` + `d8` + `apksigner`，
 不需要 Gradle，也不需要 Android Studio。

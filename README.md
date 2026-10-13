@@ -109,20 +109,21 @@ kindle/screensaver/            →  /mnt/us/screensaver/
 kindle/extensions/kpw3-screensaver/  →  /mnt/us/extensions/kpw3-screensaver/
 ```
 
-Then eject and run the one-time setup from KUAL… or, if you prefer, add a
-`Enable` entry back to `menu.json` — by default it is deliberately kept out of the
-menu because it is a one-off. The equivalent is:
+Then eject. Optionally, make the *stock* screensaver use the same picture too (so
+it matches when the device sleeps on its own). This is a one-off, optional, and
+reversible:
 
 ```sh
-sh /mnt/us/screensaver/enable.sh      # symlink the screensaver dir + install the cron fallback
+mntroot rw
+mv /usr/share/blanket/screensaver /usr/share/blanket/screensaver.orig
+ln -s /mnt/us/screensaver/images /usr/share/blanket/screensaver
+mntroot ro
 ```
 
 Point the Kindle at your server, either
 
 - by editing `/mnt/us/screensaver/server.txt` over USB (one line, plain URL), or
-- by tapping **Write to Kindle (USB)** in the Android app, or
-- from a shell: `sh /mnt/us/screensaver/set_server.sh detect` (it scans the LAN for
-  the server; it is not in the KUAL menu to keep the menu to two entries).
+- by tapping **Write to Kindle (USB)** in the Android app.
 
 Finally start it: **KUAL → Start wall display**. Press the power button once to
 stop; the screen goes back to being a normal Kindle.
@@ -134,7 +135,7 @@ edit over USB. The ones you are likely to touch:
 
 | setting | default | meaning |
 |---|---|---|
-| `FRAME_URL` | `http://192.168.1.50:8000/frame` | where to fetch (also set by the APK or `set_server.sh`) |
+| `FRAME_URL` | `http://192.168.1.50:8000/frame` | where to fetch (also set by the APK) |
 | `WALL_INTERVAL` | `900` | seconds between refreshes — **the server overrides this** |
 | `WALL_WIFI_WAIT` | `240` | how long to wait for Wi-Fi + server after a wake |
 | `SLOT_COUNT` | `1` | screensaver slots to keep (1 = fastest updates) |
@@ -145,15 +146,14 @@ server advertises it via `/health` (`ok 900`), the loop reads it once per wake
 and writes the new value straight back into `env.sh`, so it takes effect on the
 next wake — no USB, no restart.
 
-Scripts that are *not* in the KUAL menu, in case you need them:
+Scripts behind the two menu entries (in `/mnt/us/screensaver/`, in case you want
+to run them by hand):
 
 | script | what it does |
 |---|---|
-| `enable.sh` / `disable.sh` | build or undo the screensaver symlink (fully reversible) |
-| `set_server.sh show\|test\|detect` | print / test / auto-discover the server |
-| `wall.sh stop` | stop the loop from a shell |
-| `suspend_test.sh` | arm a 60 s RTC alarm, suspend, and report PASS/FAIL on screen |
-| `diag.sh` | read-only report → `/mnt/us/diag.txt` |
+| `wall.sh` | the loop: `start`, `stop`, or `run` in the foreground (it logs to `logs/wall.log`) |
+| `fetch.sh` | download one picture and put it in `images/` (+ `current.png` for the loop) |
+| `refill.sh` | what **Refresh image now** calls |
 
 ## How it works
 
@@ -168,11 +168,10 @@ wall.sh  (the loop)
    └─ repeat, until the power button is pressed (early wake = exit)
 ```
 
-The stock screensaver still works too: `enable.sh` points
-`/usr/share/blanket/screensaver` at `/mnt/us/screensaver/images`, so if the
-device ever sleeps on its own (or you just press the power button while the loop
-is stopped) the same picture appears. A cron entry (`FETCH_SCHEDULE`) refreshes
-that folder every 10 minutes as a harmless fallback.
+The stock screensaver can show the same picture too: point
+`/usr/share/blanket/screensaver` at `/mnt/us/screensaver/images` (see the install
+section) so that when the device sleeps on its own — or you press the power
+button while the loop is stopped — the same picture appears.
 
 ## Measured numbers
 
@@ -208,7 +207,7 @@ interval. At 15-minute intervals that is a very long time per charge.
 | the lock screen has leftovers from the status bar | the framework repainted after we drew; that is the price of not taking over the screen (see below) |
 | `garbled`/`torn` image | the panel was suspended mid-refresh; `draw_final` uses `eips`, which waits, so this should not happen |
 | Wi-Fi never comes back | the Kindle turns its radio off while suspended; `WALL_WIFI_WAIT` (240 s) covers a slow AP |
-| nothing after a firmware update | re-run `enable.sh` — the symlink can be reset |
+| nothing after a firmware update | redo the optional screensaver symlink (see install) |
 
 ## Design notes (the interesting part)
 
@@ -299,20 +298,7 @@ This project stands on other people's work. Thank you, in particular:
 ## Working on this repo
 
 Nothing here needs a build system. The Kindle scripts and the Python server are
-edit-and-copy, and the tests run without a device:
-
-```bat
-tools\syntax_check.bat         :: busybox-sh syntax check of every Kindle script
-tools\sh_test\run_test.bat     :: server_interval / save_interval / ensure_slots
-```
-
-```bash
-javac -d tools/jvm_test/out android/java/com/kpw3/frame/PngEncoder.java \
-      android/java/com/kpw3/frame/Dither.java android/java/com/kpw3/frame/EnvPatcher.java \
-      tools/jvm_test/*.java
-java -cp tools/jvm_test/out com.kpw3.frame.EnvPatchTest kindle/screensaver/env.sh
-java -cp tools/jvm_test/out com.kpw3.frame.PngDitherTest out.png 16
-```
+edit-and-copy: change the file, copy it to the Kindle, done.
 
 The Android app builds with `android\build.bat` — `aapt2` + `javac` + `d8` +
 `apksigner`, no Gradle and no Android Studio required.
